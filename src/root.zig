@@ -5,24 +5,19 @@ const std = @import("std");
 const builtin = @import("builtin");
 const testing = std.testing;
 
+// pub usingnamespace string;
 pub const string = @import("string.zig");
-pub usingnamespace string;
+pub const cstd = @import("cstd.zig");
+pub const global = @import("global.zig");
+pub const stdlib = @import("stdlib.zig");
+pub const errno = @import("errno.zig");
+pub const math = @import("math.zig");
+pub const ctype = @import("ctype.zig");
+pub const malloc = @import("alloc.zig");
 
 comptime {
     // TODO: figure out a method to not export unused stuff
     if (builtin.output_mode == .Lib) {
         _ = string;
     }
-}
-
-pub export fn add(a: i32, b: i32) i32 {
-    return a + b;
-}
-
-pub export fn __strlen(cstr: [*:0]u8) usize {
-    return std.mem.len(cstr);
-}
-
-test "basic add functionality" {
-    try testing.expect(add(3, 7) == 10);
 }
