@@ -16,7 +16,7 @@ else
     };
 
 pub fn set_errno(err: E) void {
-    storage.errno = err;
+    storage.errno = @intFromEnum(err);
 }
 
 pub export fn __errno_location() *c_int {

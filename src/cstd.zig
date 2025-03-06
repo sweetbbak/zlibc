@@ -3,6 +3,9 @@ const builtin = @import("builtin");
 const global = @import("global.zig");
 const errno = @import("errno.zig");
 
+const size_t = usize;
+const FILE = opaque {};
+
 pub export fn atoi(str: ?[*:0]const c_char) c_int {
     const s = str orelse return 0;
 

@@ -31,11 +31,14 @@ pub fn main() !void {
     const _src = "hello ";
     var dest = "world";
 
-    const src = try allocator.dupeZ(u8, _src);
+    var src = try allocator.dupeZ(u8, _src);
     defer allocator.free(src);
 
-    const output = strncat(@ptrCast(&dest), @ptrCast(&src), 5);
+    const output = strncat(@ptrCast(&src), @ptrCast(&dest), strlen(dest));
     const o: [*:0]u8 = @ptrCast(output);
 
     std.debug.print("strncat: {s}\n", .{std.mem.span(o)});
+
+    // run a command
+    _ = stdlib.system("ls -lah");
 }

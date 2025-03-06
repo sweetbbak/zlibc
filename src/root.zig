@@ -14,10 +14,19 @@ pub const errno = @import("errno.zig");
 pub const math = @import("math.zig");
 pub const ctype = @import("ctype.zig");
 pub const malloc = @import("alloc.zig");
+pub const printf = @import("printf.zig");
 
 comptime {
     // TODO: figure out a method to not export unused stuff
     if (builtin.output_mode == .Lib) {
         _ = string;
+        _ = cstd;
+        _ = global;
+        _ = stdlib;
+        _ = errno;
+        _ = math;
+        _ = ctype;
+        _ = malloc;
+        _ = printf.printf;
     }
 }

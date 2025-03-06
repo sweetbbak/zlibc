@@ -3,6 +3,11 @@ const builtin = @import("builtin");
 const global = @import("global.zig");
 const errno = @import("errno.zig");
 
+const posix = std.posix;
+
+const malloc = @import("alloc.zig").malloc;
+const free = @import("alloc.zig").free;
+
 pub export fn exit(status: c_int) callconv(.C) noreturn {
     {
         global.atexit_mutex.lock();
@@ -29,14 +34,14 @@ pub export fn atexit(func: global.ExitFunc) c_int {
 
     if (global.atexit_started) {
         // storage.errno = std.c.E.PERM;
-        errno.set_errno(errno.PERM);
+        errno.set_errno(errno.E.PERM);
         return -1;
     }
 
     global.atexit_funcs.append(global.gpa.allocator(), func) catch |e| switch (e) {
         error.OutOfMemory => {
             // storage.errno = std.c.E.NOMEM;
-            errno.set_errno(errno.NOMEM);
+            errno.set_errno(errno.E.NOMEM);
             return -1;
         },
     };
@@ -53,11 +58,9 @@ pub export fn abort() callconv(.C) noreturn {
 // pub export fn unsetenv(name: [*:0]const u8) callconv(.C) c_int {
 // }
 
-pub export fn getenv(name: [*:0]const u8) callconv(.C) ?[*:0]u8 {
-    if (name == null) return null;
-
-    const n = std.mem.sliceTo(name, 0);
-    const slice_key = name[0..n];
+pub export fn getenv(name: ?[*:0]const u8) callconv(.C) ?[*:0]u8 {
+    const ename = name orelse return null;
+    const slice_key = std.mem.sliceTo(ename, 0);
 
     for (std.os.environ) |line| {
         var line_i: usize = 0;
@@ -94,19 +97,51 @@ pub const const_cstr = [*:0]const u8;
 // pub export fn rand_r(name: c_uint) callconv(.C) c_int {
 // }
 
-pub export fn system(string: ?[*:0]const u8) callconv(.C) c_int {
-    if (string) |_| {
-        const argv = [3][]const u8{ "sh", "-c", string };
-        const alloc = global.gpa.allocator();
-        var child = std.process.Child.init(&argv, alloc);
-        child.spawn() catch return -1;
-        const exit_code = child.wait();
+// pub export fn system(string: ?[*:0]const u8) callconv(.C) c_int {
+//     if (string) |command| {
+//         const cmd = std.mem.sliceTo(command, 0);
+//         const argv = [3][:0]const u8{ "sh", "-c", cmd };
+//         const alloc = global.gpa.allocator();
+//
+//         var child = std.process.Child.init(&argv, alloc);
+//         child.spawn() catch return -1;
+//         const exit_code = child.wait() catch return -1;
+//
+//         switch (exit_code) {
+//             .Exited => return exit_code.Exited,
+//             else => return -1,
+//         }
+//     } else {
+//         return -1;
+//     }
+// }
 
-        switch (exit_code) {
-            .Exited => return exit_code.Exited,
-            else => return -1,
+pub export fn system(string: ?[*:0]const u8) callconv(.C) c_int {
+    const shell: [:0]const u8 = switch (builtin.os.tag) {
+        .windows => "pwsh.exe",
+        else => "sh",
+    };
+
+    if (string) |command| {
+        const pid_result = posix.fork() catch return -1;
+        if (pid_result == 0) {
+            const cmd = std.mem.sliceTo(command, 0);
+            const argv = [3][:0]const u8{ shell, "-c", cmd };
+
+            const allocator = global.gpa.allocator();
+            var arena_allocator = std.heap.ArenaAllocator.init(allocator);
+            defer arena_allocator.deinit();
+            const arena = arena_allocator.allocator();
+
+            const argv_buf = arena.allocSentinel(?[*:0]const u8, 3, null) catch return 3;
+            for (argv, 0..) |arg, i| argv_buf[i] = (arena.dupeZ(u8, arg) catch return 1).ptr;
+
+            const envp = @as([*:null]const ?[*:0]const u8, @ptrCast(std.os.environ.ptr));
+            posix.execvpeZ_expandArg0(.expand, argv_buf.ptr[0].?, argv_buf.ptr, envp) catch return -1;
         }
+
+        return 0;
     } else {
-        return -1;
+        return 1;
     }
 }

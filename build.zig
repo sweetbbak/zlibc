@@ -1,5 +1,22 @@
 const std = @import("std");
 
+/// Provides a _start symbol that will call C main
+pub fn addZigStart(
+    b: *std.Build,
+    target: std.Build.ResolvedTarget,
+    optimize: std.builtin.OptimizeMode,
+) *std.Build.Step.Compile {
+    const lib = b.addStaticLibrary(.{
+        .name = "start",
+        .root_source_file = b.path("src/start.zig"),
+        .target = target,
+        .optimize = optimize,
+        .pic = true,
+    });
+
+    return lib;
+}
+
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
@@ -15,6 +32,8 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,
+        // .pic = false,
+        .code_model = .large
     });
 
     // example zig executable
@@ -40,11 +59,27 @@ pub fn build(b: *std.Build) void {
     const lib = b.addStaticLibrary(.{
         .name = "c",
         .root_module = lib_mod,
+        // .pic = false,
     });
+
+    // lib.root_module.addCSourceFile(std.Build.Module.CSourceFile{
+    //     .file = b.path("src/printf.c")
+    // });
+    // lib.linkLibC();
 
     // This declares intent for the library to be installed into the standard
     // location when the user invokes the "install" step (the default step when
     // running `zig build`).
+    
+    // const start = addZigStart(b, target, optimize);
+    // lib.linkLibrary(start);
+
+    // fix undefined symbols for zig runtime functions
+    switch (optimize) {
+        .Debug, .ReleaseSafe => lib.bundle_compiler_rt = true,
+        .ReleaseFast, .ReleaseSmall => {},
+    }
+
     b.installArtifact(lib);
 
     // This creates another `std.Build.Step.Compile`, but this one builds an executable
