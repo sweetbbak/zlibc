@@ -7,6 +7,7 @@ const testing = std.testing;
 pub const libc = @import("glibc-start.zig");
 pub const string = @import("string.zig");
 pub const cstd = @import("cstd.zig");
+pub const stdio = @import("stdio.zig");
 pub const global = @import("global.zig");
 pub const stdlib = @import("stdlib.zig");
 pub const errno = @import("errno.zig");
@@ -28,13 +29,14 @@ pub fn getauxval(index: usize) callconv(.C) usize {
 
 
 comptime {
-    @export(&getauxval, .{ .linkage = .strong, .name = "getauxval" });
+    // @export(&getauxval, .{ .linkage = .strong, .name = "getauxval" });
 
     // TODO: figure out a method to not export unused stuff
     if (builtin.output_mode == .Lib) {
-        _ = std.os.linux.getauxval;
+        // _ = std.os.linux.getauxval;
         // _ = start;
-        _ = libc;
+        // _ = libc;
+        _ = stdio;
         _ = string;
         _ = cstd;
         _ = global;

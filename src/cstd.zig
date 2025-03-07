@@ -34,6 +34,12 @@ pub export fn reverse(buffer: [*]u8, len: usize) [*]u8 {
     return buffer;
 }
 
+pub export fn sprintf(integer: usize, buffer: [*]u8, len: usize) c_int {
+    const slice: []u8 = buffer[0..len];
+    _ = std.fmt.bufPrint(slice, "{d}", .{integer}) catch return -1;
+    return 0;
+}
+
 pub export fn itoa(integer: usize, buffer: [*]u8, radix: u8) c_int {
     var val = integer;
     var i: usize = 0;

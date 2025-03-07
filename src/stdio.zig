@@ -16,3 +16,37 @@ const SEEK_END = 2;
 
 const L_tmpnam = 20;
 const TMP_MAX = 238328;
+
+/// print the following string to stdout with a newline
+pub export fn puts(buf: ?[*:0]const u8) callconv(.C) c_int {
+    const sbuf = buf orelse return -1;
+    const writer = std.io.getStdOut().writer();
+    const n = std.mem.len(sbuf);
+    _ = writer.write(sbuf[0..n]) catch return EOF;
+    _ = writer.writeByte('\n') catch return EOF;
+
+    return 0;
+}
+
+/// print the following string to stdout without a newline
+pub export fn put(buf: [*:0]const u8) callconv(.C) c_int {
+    const writer = std.io.getStdOut().writer();
+    const n = std.mem.len(buf);
+    _ = writer.write(buf[0..n]) catch return EOF;
+    return 0;
+}
+
+/// print a single character to stdout
+pub export fn putchar(char: u8) callconv(.C) c_int {
+    const writer = std.io.getStdOut().writer();
+    _ = writer.writeByte(char) catch return EOF;
+    return 0;
+}
+
+// pub export fn fputs(buf: [*:0]const u8, file: *std.c.FILE) callconv(.C) void {
+//     const writer = std.io.getStdOut().writer();
+//     const n = std.mem.len(buf);
+//     std.posix.write(file, );
+//     _ = writer.write(buf[0..n]) catch return;
+//     _ = writer.writeByte('\n') catch return;
+// }
