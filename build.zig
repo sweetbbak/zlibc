@@ -62,6 +62,11 @@ pub fn build(b: *std.Build) void {
         // .pic = false,
     });
 
+    const so = b.addSharedLibrary(.{
+        .name = "c",
+        .root_module = lib_mod,
+    });
+
     // lib.root_module.addCSourceFile(std.Build.Module.CSourceFile{
     //     .file = b.path("src/printf.c")
     // });
@@ -81,6 +86,7 @@ pub fn build(b: *std.Build) void {
     }
 
     b.installArtifact(lib);
+    b.installArtifact(so);
 
     // This creates another `std.Build.Step.Compile`, but this one builds an executable
     // rather than a static library.

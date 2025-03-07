@@ -2,6 +2,7 @@ const std = @import("std");
 const builtin = @import("builtin");
 const global = @import("global.zig");
 const errno = @import("errno.zig");
+const start = @import("_start.zig");
 
 const posix = std.posix;
 
@@ -20,7 +21,9 @@ pub export fn exit(status: c_int) callconv(.C) noreturn {
             global.atexit_funcs.items[i - 1]();
         }
     }
-    std.process.exit(@intCast(status));
+
+    start.exit2(@intCast(status));
+    // std.process.exit(@intCast(status));
 }
 
 const ExitFunc = switch (builtin.zig_backend) {
@@ -116,32 +119,32 @@ pub const const_cstr = [*:0]const u8;
 //     }
 // }
 
-pub export fn system(string: ?[*:0]const u8) callconv(.C) c_int {
-    const shell: [:0]const u8 = switch (builtin.os.tag) {
-        .windows => "pwsh.exe",
-        else => "sh",
-    };
-
-    if (string) |command| {
-        const pid_result = posix.fork() catch return -1;
-        if (pid_result == 0) {
-            const cmd = std.mem.sliceTo(command, 0);
-            const argv = [3][:0]const u8{ shell, "-c", cmd };
-
-            const allocator = global.gpa.allocator();
-            var arena_allocator = std.heap.ArenaAllocator.init(allocator);
-            defer arena_allocator.deinit();
-            const arena = arena_allocator.allocator();
-
-            const argv_buf = arena.allocSentinel(?[*:0]const u8, 3, null) catch return 3;
-            for (argv, 0..) |arg, i| argv_buf[i] = (arena.dupeZ(u8, arg) catch return 1).ptr;
-
-            const envp = @as([*:null]const ?[*:0]const u8, @ptrCast(std.os.environ.ptr));
-            posix.execvpeZ_expandArg0(.expand, argv_buf.ptr[0].?, argv_buf.ptr, envp) catch return -1;
-        }
-
-        return 0;
-    } else {
-        return 1;
-    }
-}
+// pub export fn system(string: ?[*:0]const u8) callconv(.C) c_int {
+//     const shell: [:0]const u8 = switch (builtin.os.tag) {
+//         .windows => "pwsh.exe",
+//         else => "sh",
+//     };
+//
+//     if (string) |command| {
+//         const pid_result = posix.fork() catch return -1;
+//         if (pid_result == 0) {
+//             const cmd = std.mem.sliceTo(command, 0);
+//             const argv = [3][:0]const u8{ shell, "-c", cmd };
+//
+//             const allocator = global.gpa.allocator();
+//             var arena_allocator = std.heap.ArenaAllocator.init(allocator);
+//             defer arena_allocator.deinit();
+//             const arena = arena_allocator.allocator();
+//
+//             const argv_buf = arena.allocSentinel(?[*:0]const u8, 3, null) catch return 3;
+//             for (argv, 0..) |arg, i| argv_buf[i] = (arena.dupeZ(u8, arg) catch return 1).ptr;
+//
+//             const envp = @as([*:null]const ?[*:0]const u8, @ptrCast(std.os.environ.ptr));
+//             posix.execvpeZ_expandArg0(.expand, argv_buf.ptr[0].?, argv_buf.ptr, envp) catch return -1;
+//         }
+//
+//         return 0;
+//     } else {
+//         return 1;
+//     }
+// }

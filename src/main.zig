@@ -23,22 +23,34 @@ pub fn main() !void {
 
     const str: [*:0]const u8 = @ptrCast(_str);
     const len = strlen(str);
+
     std.debug.print("strlen: {d}\n", .{len});
-
     std.debug.print("strlen: {d}\n", .{strlen(@as([*:0]const u8, @ptrCast(@constCast(str))))});
-    std.debug.print("strlen: {d}\n", .{strlen(@as([*:0]const u8, @ptrCast(@constCast("hello world"))))});
+    std.debug.print("strlen: {d}\n", .{strlen(@as([*:0]const u8, @ptrCast(@constCast("hello world!"))))});
 
-    const _src = "hello ";
-    var dest = "world";
+    const _src = "world!";
+    const _dest = "hello ";
 
-    var src = try allocator.dupeZ(u8, _src);
+    const src = try allocator.dupeZ(u8, _src);
     defer allocator.free(src);
 
-    const output = strncat(@ptrCast(&src), @ptrCast(&dest), strlen(dest));
-    const o: [*:0]u8 = @ptrCast(output);
+    const dest = try allocator.dupeZ(u8, _dest);
+    defer allocator.free(dest);
 
-    std.debug.print("strncat: {s}\n", .{std.mem.span(o)});
+    const output = strncat(dest, src, strlen(dest));
+
+    // const output = strncat(&dest, &src, strlen(dest));
+    std.debug.print("strncat: {s}\n", .{std.mem.span(output)});
+
+    var mem = malloc.malloc(10);
+    defer malloc.free(mem);
+    var block: []u8 = @ptrCast(mem.?[0..10]);
+
+    const fd = try std.posix.open("/dev/urandom", .{}, 0o644);
+    const n = try std.posix.read(fd, block);
+    std.debug.print("read: {d} - {any}\n", .{n, block[0..n]});
+
 
     // run a command
-    _ = stdlib.system("ls -lah");
+    // _ = stdlib.system("ls -lah");
 }
