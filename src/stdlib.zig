@@ -64,10 +64,10 @@ pub export fn abort() callconv(.C) noreturn {
 pub export fn getenv(name: ?[*:0]const u8) callconv(.C) ?[*:0]u8 {
     const ename = name orelse return null;
     const slice_key = std.mem.sliceTo(ename, 0);
-    std.debug.print("getenv: key = {s}\n", .{ename});
 
     // hasnt been populated yet
     for (std.os.environ) |line| {
+        std.debug.print("getenv: {s}\n", .{line});
         var line_i: usize = 0;
         while (line[line_i] != 0 and line[line_i] != '=') : (line_i += 1) {}
         const key = line[0..line_i];

@@ -2,9 +2,10 @@
 /// alongside the glibc start code (i.e. crtn.o, etc)
 const std = @import("std");
 const builtin = @import("builtin");
+pub const start = @import("_start.zig");
 
-const c = struct {
-    extern fn main(argc: c_int, argv: [*:null]?[*:0]u8) callconv(.C) c_int;
+pub const c = struct {
+    pub extern fn main(argc: c_int, argv: [*:null]?[*:0]u8) callconv(.C) c_int;
 };
 
 export fn __libc_csu_init(
@@ -43,11 +44,17 @@ export fn __libc_start_main(
     // TODO: pass envp
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    var result = c.main(argc, argv);
-    if (result != 0) {
-        while ((result & 0xff == 0)) result = result >> 8;
-    }
-    std.process.exit(@as(u8, @intCast(result & 0xff)));
+    // _ = argc;
+    // _ = argv;
+    // var result = start.callMain();
+
+    _ = argc;
+    start.posixCallMainAndExit(@ptrCast(argv));
+    // var result = c.main(argc, argv);
+    // if (result != 0) {
+    //     while ((result & 0xff == 0)) result = result >> 8;
+    // }
+    // std.process.exit(@as(u8, @intCast(result & 0xff)));
     // std.os.exit(@as(u8, @intCast(result & 0xff)));
 }
 
