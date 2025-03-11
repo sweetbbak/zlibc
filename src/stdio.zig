@@ -1,21 +1,25 @@
 const std = @import("std");
 
+pub const stdin = 0;
+pub const stdout = 1;
+pub const stderr = 2;
+
 /// default buffer size
 const BUFSIZE = 8192;
 
 /// The value returned by fgetc and similar functions to indicate the
 /// end of the file.
-const EOF = -1;
+pub const EOF = -1;
 
 /// Seek from beginning of file.
-const SEEK_SET = 0;
+pub const SEEK_SET = 0;
 /// Seek from current position.
-const SEEK_CUR = 1;
+pub const SEEK_CUR = 1;
 /// Seek from end of file.
-const SEEK_END = 2;
+pub const SEEK_END = 2;
 
-const L_tmpnam = 20;
-const TMP_MAX = 238328;
+pub const L_tmpnam = 20;
+pub const TMP_MAX = 238328;
 
 /// print the following string to stdout with a newline
 pub export fn puts(buf: ?[*:0]const u8) callconv(.C) c_int {
